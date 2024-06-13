@@ -1,5 +1,8 @@
-[ 
-  call 
-  [ getProperty [ globalObject ] console log ] 
-  _800
+[
+  doThings
+  [ 
+    list
+    [ call [ getProperty [ globalObject ] console log ] _800 ]
+    [ call [ getProperty [ globalObject ] console log ] _900 ]
+  ]
 ]
