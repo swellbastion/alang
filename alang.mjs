@@ -14,9 +14,13 @@ const builtins =
       thing = thing[args[i]];
     return thing;
   },
+  "call": function(args)
+  {
+    args[0].apply(null, args.slice(1));
+  },
 };
 
-const executeList = function(list)
+function executeList(list)
 {
   for (let i = 0; i < list.length; i++)
     if (Array.isArray(list[i]))

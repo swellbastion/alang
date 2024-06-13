@@ -1,1 +1,5 @@
-[ getProperty [ globalObject ] setTimeout ]
+[ 
+  call 
+  [ getProperty [ globalObject ] console log ] 
+  helloworld
+]
