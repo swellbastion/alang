@@ -33,6 +33,4 @@ const sourceCode = await fs.readFile("source-code.alang", "utf-8");
 
 const json = compileRegex(sourceCode);
 
-// console.log(json);
-
-console.log(executeList(json));
+executeList(json);

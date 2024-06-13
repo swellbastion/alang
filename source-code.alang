@@ -1,5 +1,5 @@
 [ 
   call 
   [ getProperty [ globalObject ] console log ] 
-  helloworld
+  _800
 ]
