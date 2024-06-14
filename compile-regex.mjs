@@ -9,6 +9,7 @@ export function compileRegex(string)
   output = output.replaceAll(endingCommaRegex, "$1");
   output = output.replaceAll(underscoreWords, "$1");
   output = output.slice(0, -1);
+  output = `["doThings",${output}]`;
   // console.log(output);
   output = JSON.parse(output);
   // console.log(output);

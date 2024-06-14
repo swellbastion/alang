@@ -19,47 +19,58 @@ const builtins =
     let path = args.slice(0, -1);
     let value = args[args.length - 1];
     let thing = path[0];
-    for (let i = 1; i < path.length; i++)
+    for (let i = 1; i < path.length - 1; i++)
       thing = thing[path[i]];
-    thing = value;
+    thing[path[path.length - 1]] = value;
   },
-  "call": function(args)
+  "callFunction": function(args)
   {
-    args[0].apply(null, args.slice(1));
+    return args[0].apply(null, args.slice(1));
   },
   "function": function(args)
   {
-    const body = `executeList(${JSON.stringify(args[1])})`;
+    const body = `executeArray(${JSON.stringify(args[1])})`;
     return new Function(args[0], body);
   },
   "doThings": function(args)
   {
-    for (const list of args[0]) executeList(list);
+    for (const array of args)
+    {
+      executeArray(array);
+    }
   }
 };
 
-function executeList(list)
+function executeArray(array)
 {
-  for (let i = 0; i < list.length; i++)
+  if (!Array.isArray(array)) return array;
+  for (let i = 0; i < array.length; i++)
   {
-    if (Array.isArray(list[i]))
+    const item = array[i];
+    if (Array.isArray(item))
     {
-      if (list[i][0] === "list")
+      if (item[0] === "array")
       {
-        list[i] = list[i].slice(1);
+        item.shift();
+        for (const subArrayItem of item)
+          if (Array.isArray(subArrayItem)) 
+            executeArray(subArrayItem);
       }
       else
       {
-        list[i] = executeList(list[i]);
+        array[i] = executeArray(item);
       }
     }
   }
-  const [first, ...others] = list;
-  return builtins[first](others);
+
+  const [first, ...others] = array;
+  if (first === "array") return array;
+  else return builtins[first](others);
+
 };
 
 const sourceCode = await fs.readFile("source-code.alang", "utf-8");
 
 const json = compileRegex(sourceCode);
 
-executeList(json);
+executeArray(json);
