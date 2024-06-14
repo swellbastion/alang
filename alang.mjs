@@ -1,6 +1,7 @@
 const fs = await import("node:fs/promises");
 const { compileRegex } = await import("./compile-regex.mjs")
 
+// Functions that come built in to the language.
 const builtins =
 {
   "globalObject": function()
@@ -36,23 +37,27 @@ const builtins =
     const penguinRegex = /"🐧(.*)"/g;
     const doThingsExpressionString = JSON.stringify(doThingsExpression)
       .replaceAll(penguinRegex, "$1");
-    const body = `ALangEval(${doThingsExpressionString})`;
+    const body = `alangEval(${doThingsExpressionString})`;
     return new Function(arrayToCodeRecursive(args[0]), body);
   },
   "doThings": function(args)
   {
     for (const array of args)
     {
-      ALangEval(array);
+      alangEval(array);
     }
   },
   "enterDebugger": function()
   {
     debugger;
-  }
+  },
 };
 
-global.ALangEval = function(expression)
+// The eval function for the language. 
+// The expression parameter is a javascript array. 
+// It is on the global object so that it's accessible by 
+// javascript which is parsed in the future.
+global.alangEval = function(expression)
 {
   if (!Array.isArray(expression)) return expression;
 
@@ -65,11 +70,11 @@ global.ALangEval = function(expression)
       {
         for (const subArrayItem of listItem)
           if (Array.isArray(subArrayItem)) 
-            ALangEval(subArrayItem);
+            alangEval(subArrayItem);
       }
       else
       {
-        expression[i] = ALangEval(listItem);
+        expression[i] = alangEval(listItem);
       }
     }
   }
@@ -80,6 +85,8 @@ global.ALangEval = function(expression)
 
 };
 
+// Removes the first element of the array if the first element is the string "array".
+// Also does so recursively for any child arrays.
 function arrayToCodeRecursive(value)
 {
   let returnValue = value;
@@ -92,13 +99,14 @@ function arrayToCodeRecursive(value)
   return returnValue;
 }
 
+// Looks for ["argument" myArgument] and replaces it with "🐧myArgument"
 function markFunctionArguments(expression)
 {
   const penguinEmoji = "🐧";
   let returnValue = expression;
   if (Array.isArray(returnValue))
   {
-    if (returnValue[0] === "argument")
+    if (returnValue[0] === "getArgument")
     {
       returnValue = returnValue.slice(1);
       returnValue = penguinEmoji + returnValue[0];
@@ -113,4 +121,4 @@ const sourceCode = await fs.readFile("source-code.alang", "utf-8");
 
 const json = compileRegex(sourceCode);
 
-ALangEval(json);
+alangEval(json);
