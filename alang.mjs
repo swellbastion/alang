@@ -27,50 +27,73 @@ const builtins =
   {
     return args[0].apply(null, args.slice(1));
   },
-  "function": function(args)
+  "defineFunction": function(args)
   {
-    const body = `executeArray(${JSON.stringify(args[1])})`;
+    let expressions = args.slice(1);
+    expressions = arrayToCodeRecursive(expressions);
+    const expressionsString = expressions.map
+    (
+      expression => JSON.stringify(expression)
+    )
+      .join(",");
+    const body = `ALangEval(["doThings", ${expressionsString}])`;
     return new Function(args[0], body);
   },
   "doThings": function(args)
   {
     for (const array of args)
     {
-      executeArray(array);
+      ALangEval(array);
     }
+  },
+  "enterDebugger": function()
+  {
+    debugger;
   }
 };
 
-function executeArray(array)
+global.ALangEval = function(expression)
 {
-  if (!Array.isArray(array)) return array;
-  for (let i = 0; i < array.length; i++)
+  if (!Array.isArray(expression)) return expression;
+
+  for (let i = 0; i < expression.length; i++)
   {
-    const item = array[i];
-    if (Array.isArray(item))
+    const listItem = expression[i];
+    if (Array.isArray(listItem))
     {
-      if (item[0] === "array")
+      if (listItem[0] === "array")
       {
-        item.shift();
-        for (const subArrayItem of item)
+        for (const subArrayItem of listItem)
           if (Array.isArray(subArrayItem)) 
-            executeArray(subArrayItem);
+            ALangEval(subArrayItem);
       }
       else
       {
-        array[i] = executeArray(item);
+        expression[i] = ALangEval(listItem);
       }
     }
   }
 
-  const [first, ...others] = array;
-  if (first === "array") return array;
+  const [first, ...others] = expression;
+  if (first === "array") return expression;
   else return builtins[first](others);
 
 };
+
+function arrayToCodeRecursive(value)
+{
+  let returnValue = value;
+  if (Array.isArray(value))
+  {
+    if (returnValue[0] === "array")
+      returnValue = returnValue.slice(1);
+    returnValue = returnValue.map(arrayToCodeRecursive);
+  }
+  return returnValue;
+}
 
 const sourceCode = await fs.readFile("source-code.alang", "utf-8");
 
 const json = compileRegex(sourceCode);
 
-executeArray(json);
+ALangEval(json);

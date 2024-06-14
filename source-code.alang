@@ -1,2 +1,10 @@
-[ setProperty [ globalObject ] myThing _800 ]
-[ array callFunction [ getProperty [ globalObject ] console log ] [ getProperty [ globalObject ] myThing ] ]
+[ setProperty [ globalObject ] myFunction 
+
+  [ defineFunction [array] 
+    [ array callFunction [ array getProperty [ array globalObject ] console log ] hello ]
+    [ array callFunction [ array getProperty [ array globalObject ] console log ] world ]
+  ]
+
+]
+
+[ callFunction [ getProperty [ globalObject ] myFunction ] ]
