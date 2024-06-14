@@ -31,13 +31,13 @@ const builtins =
   {
     let expressions = args.slice(1);
     expressions = arrayToCodeRecursive(expressions);
-    const expressionsString = expressions.map
-    (
-      expression => JSON.stringify(expression)
-    )
-      .join(",");
-    const body = `ALangEval(["doThings", ${expressionsString}])`;
-    return new Function(args[0], body);
+    let doThingsExpression = ["doThings"].concat(expressions);
+    doThingsExpression = markFunctionArguments(doThingsExpression);
+    const penguinRegex = /"🐧(.*)"/g;
+    const doThingsExpressionString = JSON.stringify(doThingsExpression)
+      .replaceAll(penguinRegex, "$1");
+    const body = `ALangEval(${doThingsExpressionString})`;
+    return new Function(arrayToCodeRecursive(args[0]), body);
   },
   "doThings": function(args)
   {
@@ -83,11 +83,28 @@ global.ALangEval = function(expression)
 function arrayToCodeRecursive(value)
 {
   let returnValue = value;
-  if (Array.isArray(value))
+  if (Array.isArray(returnValue))
   {
     if (returnValue[0] === "array")
       returnValue = returnValue.slice(1);
     returnValue = returnValue.map(arrayToCodeRecursive);
+  }
+  return returnValue;
+}
+
+function markFunctionArguments(expression)
+{
+  const penguinEmoji = "🐧";
+  let returnValue = expression;
+  if (Array.isArray(returnValue))
+  {
+    if (returnValue[0] === "argument")
+    {
+      returnValue = returnValue.slice(1);
+      returnValue = penguinEmoji + returnValue[0];
+      return returnValue;
+    }
+    returnValue = returnValue.map(markFunctionArguments);
   }
   return returnValue;
 }
