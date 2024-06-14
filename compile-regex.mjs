@@ -4,9 +4,19 @@ export function compileRegex(string)
 {
   let output;
 
+  // Transform opening square brackets into [ "array",
+  const openingBracketRegex = /\[/g;
+  output = string.replaceAll(openingBracketRegex, "[ array ");
+
+  // get rid of parentheses
+  const openingParenthesesRegex = /\(/g;
+  output = output.replaceAll(openingParenthesesRegex, "[");
+  const closingParenthesesRegex = /\)/g;
+  output = output.replaceAll(closingParenthesesRegex, "]");
+
   // Wrap words in double quotes.
   const wordRegex = /([^\s_\[\],]+)/g;
-  output = string.replaceAll(wordRegex, "\"$1\",");
+  output = output.replaceAll(wordRegex, "\"$1\",");
 
   // Add commas after ending brackets.
   const endingBracketRegex = /\]/g;
