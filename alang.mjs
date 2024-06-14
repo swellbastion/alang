@@ -8,14 +8,14 @@ const builtins =
   {
     return global;
   },
-  "getProperty": function(args)
+  "getProperty": function(args, context)
   {
     let thing = args[0];
     for (let i = 1; i < args.length; i++)
       thing = thing[args[i]];
     return thing;
   },
-  "setProperty": function(args)
+  "setProperty": function(args, context)
   {
     let path = args.slice(0, -1);
     let value = args[args.length - 1];
@@ -24,11 +24,11 @@ const builtins =
       thing = thing[path[i]];
     thing[path[path.length - 1]] = value;
   },
-  "callFunction": function(args)
+  "callFunction": function(args, context)
   {
     return args[0].apply(null, args.slice(1));
   },
-  "defineFunction": function(args)
+  "defineFunction": function(args, context)
   {
     const argumentNames = arrayToCodeRecursive(args[0]);
     let expressions = args.slice(1);
@@ -47,11 +47,13 @@ const builtins =
     const body = `alangEval(${doThingsExpressionString}, ${argumentsToPass});`;
     return new Function(argumentNames, body);
   },
-  "doThings": function(args)
+  "doThings": function(args, context)
   {
-    for (const array of args)
+    for (const i = 0; i < args.length; i++)
     {
-      alangEval(array);
+      const array = args[i];
+      if (i === args.length - 1) return alangEval(array, context)
+      alangEval(array, context);
     }
   },
   "enterDebugger": function(args, context)
@@ -120,4 +122,4 @@ const sourceCode = await fs.readFile("source-code.alang", "utf-8");
 
 const json = compileRegex(sourceCode);
 
-alangEval(json);
+console.log(alangEval(json));
