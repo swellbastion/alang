@@ -30,15 +30,22 @@ const builtins =
   },
   "defineFunction": function(args)
   {
+    const argumentNames = arrayToCodeRecursive(args[0]);
     let expressions = args.slice(1);
     expressions = arrayToCodeRecursive(expressions);
     let doThingsExpression = ["doThings"].concat(expressions);
-    doThingsExpression = markFunctionArguments(doThingsExpression);
+    // doThingsExpression = markFunctionArguments(doThingsExpression);
     const penguinRegex = /"🐧(.*)"/g;
     const doThingsExpressionString = JSON.stringify(doThingsExpression)
       .replaceAll(penguinRegex, "$1");
-    const body = `alangEval(${doThingsExpressionString})`;
-    return new Function(arrayToCodeRecursive(args[0]), body);
+    let argumentsToPass = "[";
+    for (let i = 0; i < argumentNames.length; i++)
+    {
+      argumentsToPass += `["${argumentNames[i]}", ${argumentNames[i]}]`;
+    }
+    argumentsToPass += "]";
+    const body = `alangEval(${doThingsExpressionString}, ${argumentsToPass});`;
+    return new Function(argumentNames, body);
   },
   "doThings": function(args)
   {
@@ -47,17 +54,21 @@ const builtins =
       alangEval(array);
     }
   },
-  "enterDebugger": function()
+  "enterDebugger": function(args, context)
   {
     debugger;
   },
+  "getArgument": function(args, context)
+  {
+    return context.find((item) => item[0] === args[0])[1];
+  }
 };
 
 // The eval function for the language. 
 // The expression parameter is a javascript array. 
 // It is on the global object so that it's accessible by 
 // javascript which is parsed in the future.
-global.alangEval = function(expression)
+global.alangEval = function(expression, context)
 {
   if (!Array.isArray(expression)) return expression;
 
@@ -70,18 +81,18 @@ global.alangEval = function(expression)
       {
         for (const subArrayItem of listItem)
           if (Array.isArray(subArrayItem)) 
-            alangEval(subArrayItem);
+            alangEval(subArrayItem, context);
       }
       else
       {
-        expression[i] = alangEval(listItem);
+        expression[i] = alangEval(listItem, context);
       }
     }
   }
 
   const [first, ...others] = expression;
   if (first === "array") return expression;
-  else return builtins[first](others);
+  else return builtins[first](others, context);
 
 };
 
@@ -95,24 +106,6 @@ function arrayToCodeRecursive(value)
     if (returnValue[0] === "array")
       returnValue = returnValue.slice(1);
     returnValue = returnValue.map(arrayToCodeRecursive);
-  }
-  return returnValue;
-}
-
-// Looks for ["argument" myArgument] and replaces it with "🐧myArgument"
-function markFunctionArguments(expression)
-{
-  const penguinEmoji = "🐧";
-  let returnValue = expression;
-  if (Array.isArray(returnValue))
-  {
-    if (returnValue[0] === "getArgument")
-    {
-      returnValue = returnValue.slice(1);
-      returnValue = penguinEmoji + returnValue[0];
-      return returnValue;
-    }
-    returnValue = returnValue.map(markFunctionArguments);
   }
   return returnValue;
 }
