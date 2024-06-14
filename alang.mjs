@@ -61,7 +61,13 @@ const builtins =
   "getArgument": function(args, context)
   {
     return context.find((item) => item[0] === args[0])[1];
-  }
+  },
+  "setArgument": function(args, context)
+  {
+    const [key, value] = args;
+    const item = context.find((item) => item[0] === key);
+    item[1] = value;
+  },
 };
 
 // The eval function for the language. 

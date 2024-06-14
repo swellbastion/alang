@@ -2,6 +2,7 @@
 
   ( defineFunction [ myArgument ] 
     [ callFunction [ getProperty [ globalObject ] console log ] hello ]
+    [ setArgument myArgument MrOverride ]
     [ callFunction [ getProperty [ globalObject ] console log ] [ getArgument myArgument ] ]
   )
 
