@@ -27,7 +27,7 @@ const builtins =
   },
   "callFunction": function(args)
   {
-    return args[0].apply(null, ...args.slice(1));
+    return args[0].apply(args[0], args.slice(1));
   },
   "defineFunction": function(args)
   {
@@ -50,12 +50,12 @@ const builtins =
   },
   "doThings": function(args, context)
   {
-    for (let i = 0; i < args.length; i++)
-    {
-      const array = args[i];
-      if (i === args.length - 1) return alangEval(array, context)
-      alangEval(array, context);
-    }
+    // for (let i = 0; i < args.length; i++)
+    // {
+    //   const array = args[i];
+    //   if (i === args.length - 1) return alangEval(array, context)
+    //   alangEval(array, context);
+    // }
   },
   "enterDebugger": function(args, context)
   {
@@ -76,6 +76,10 @@ const builtins =
     const [word, func] = args;
     builtins[word] = func;
   },
+  "getWord": function(args)
+  {
+    return builtins[args[0]];
+  },
 };
 
 // The eval function for the language. 
@@ -91,7 +95,7 @@ global.alangEval = function(expression, context)
     const listItem = expression[i];
     if (Array.isArray(listItem))
     {
-      if (listItem[0] === "array")
+      if (listItem[0] === "data")
       {
         for (const subArrayItem of listItem)
           if (Array.isArray(subArrayItem)) 
@@ -104,20 +108,22 @@ global.alangEval = function(expression, context)
     }
   }
 
-  const [first, ...others] = expression;
-  if (first === "array") return expression;
-  else return builtins[first](others, context);
+  let [first, ...others] = expression;
+  others = arrayToCodeRecursive(others);
+  if (first === "data") return expression;
+  else if (first !== undefined) return builtins[first](others, context);
+  else return [];
 
 };
 
-// Removes the first element of the array if the first element is the string "array".
+// Removes the first element of the array if the first element is the string "data".
 // Also does so recursively for any child arrays.
 function arrayToCodeRecursive(value)
 {
   let returnValue = value;
   if (Array.isArray(returnValue))
   {
-    if (returnValue[0] === "array")
+    if (returnValue[0] === "data")
       returnValue = returnValue.slice(1);
     returnValue = returnValue.map(arrayToCodeRecursive);
   }

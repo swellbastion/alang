@@ -1,8 +1,7 @@
-( registerWord printLux
-  ( defineFunction [ string ] [ callFunction [ getProperty [ globalObject ] console log ] [ getArgument string ] ] )
+(callFunction 
+  (defineFunction [v]
+    [callFunction [getProperty [globalObject] console log] hello]
+    [callFunction [getProperty [globalObject] console log] [getArgument v]]
+  )
+  john
 )
-
-( printLux hi )
-( printLux bye )
-
-( callFunction ( getProperty ( globalObject ) Math random ) )

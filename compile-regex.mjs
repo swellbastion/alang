@@ -4,9 +4,9 @@ export function compileRegex(string)
 {
   let output;
 
-  // Transform opening square brackets into [ "array",
+  // Transform opening square brackets into [ "data",
   const openingBracketRegex = /\[/g;
-  output = string.replaceAll(openingBracketRegex, "[ array ");
+  output = string.replaceAll(openingBracketRegex, "[ data ");
 
   // get rid of parentheses
   const openingParenthesesRegex = /\(/g;
@@ -33,7 +33,7 @@ export function compileRegex(string)
   // Remove the comma at the end of the string.
   output = output.slice(0, -1);
 
-  // Wrap all the arrays in a doThings expression so that the programmer doesn't have to do it.
+  // Wrap all the datas in a doThings expression so that the programmer doesn't have to do it.
   output = `["doThings",${output}]`;
 
   return JSON.parse(output);
