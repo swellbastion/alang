@@ -1,11 +1,8 @@
-( setProperty ( globalObject ) myFunction 
-
-  ( defineFunction [ myArgument ] 
-    [ callFunction [ getProperty [ globalObject ] console log ] hello ]
-    [ setArgument myArgument MrOverride ]
-    [ callFunction [ getProperty [ globalObject ] console log ] [ getArgument myArgument ] ]
-  )
-
+( registerWord printLux
+  ( defineFunction [ string ] [ callFunction [ getProperty [ globalObject ] console log ] [ getArgument string ] ] )
 )
 
-( callFunction ( getProperty ( globalObject ) myFunction ) penguin )
+( printLux hi )
+( printLux bye )
+
+( callFunction ( getProperty ( globalObject ) Math random ) )

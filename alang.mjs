@@ -2,20 +2,21 @@ const fs = await import("node:fs/promises");
 const { compileRegex } = await import("./compile-regex.mjs")
 
 // Functions that come built in to the language.
+// More can be added at runtime.
 const builtins =
 {
   "globalObject": function()
   {
     return global;
   },
-  "getProperty": function(args, context)
+  "getProperty": function(args)
   {
     let thing = args[0];
     for (let i = 1; i < args.length; i++)
       thing = thing[args[i]];
     return thing;
   },
-  "setProperty": function(args, context)
+  "setProperty": function(args)
   {
     let path = args.slice(0, -1);
     let value = args[args.length - 1];
@@ -24,11 +25,11 @@ const builtins =
       thing = thing[path[i]];
     thing[path[path.length - 1]] = value;
   },
-  "callFunction": function(args, context)
+  "callFunction": function(args)
   {
-    return args[0].apply(null, args.slice(1));
+    return args[0].apply(null, ...args.slice(1));
   },
-  "defineFunction": function(args, context)
+  "defineFunction": function(args)
   {
     const argumentNames = arrayToCodeRecursive(args[0]);
     let expressions = args.slice(1);
@@ -38,18 +39,18 @@ const builtins =
     const penguinRegex = /"🐧(.*)"/g;
     const doThingsExpressionString = JSON.stringify(doThingsExpression)
       .replaceAll(penguinRegex, "$1");
-    let argumentsToPass = "[";
+    let context = "[";
     for (let i = 0; i < argumentNames.length; i++)
     {
-      argumentsToPass += `["${argumentNames[i]}", ${argumentNames[i]}]`;
+      context += `["${argumentNames[i]}", ${argumentNames[i]}]`;
     }
-    argumentsToPass += "]";
-    const body = `alangEval(${doThingsExpressionString}, ${argumentsToPass});`;
+    context += "]";
+    const body = `alangEval(${doThingsExpressionString}, ${context});`;
     return new Function(argumentNames, body);
   },
   "doThings": function(args, context)
   {
-    for (const i = 0; i < args.length; i++)
+    for (let i = 0; i < args.length; i++)
     {
       const array = args[i];
       if (i === args.length - 1) return alangEval(array, context)
@@ -69,6 +70,11 @@ const builtins =
     const [key, value] = args;
     const item = context.find((item) => item[0] === key);
     item[1] = value;
+  },
+  "registerWord": function(args)
+  {
+    const [word, func] = args;
+    builtins[word] = func;
   },
 };
 
