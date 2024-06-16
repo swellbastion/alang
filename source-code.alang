@@ -1,1 +1,6 @@
-[callFunction (getProperty (globalObject) console log ) [hello world]]
+[set [myVar Jesse]
+  [
+    [callFunction (getProperty (globalObject) console log ) hello]
+    [callFunction (getProperty (globalObject) console log ) (get myVar)]
+  ]
+]

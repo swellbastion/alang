@@ -85,6 +85,32 @@ const builtins =
   {
     return builtins[args[0]];
   },
+  "set": function(args, variables)
+  {
+    const [settings, code] = args;
+    const added = [];
+    for (let i = 0; i < settings.length;) 
+    {
+      added.push(settings[i])
+      variables.unshift({[settings[i]]: settings[i + 1]});
+      i += 2;
+    }
+
+    const returnValue = builtins.doThings(code, variables);
+
+    for (const name of added)
+    {
+      const index = variables.findIndex(v => Object.hasOwn(name));
+      variables.splice(index, 1);
+    }
+
+    return returnValue;
+  },
+  "get": function(args, variables)
+  {
+    const name = args[0];
+    return variables.find(v => Object.hasOwn(v, name))[name];
+  },
 };
 
 // The eval function for the language. 
@@ -95,7 +121,7 @@ global.alangEval = function(expression, variables)
 {
   if (expression instanceof CodeArray)
   {
-    expression.array = expression.array.map(alangEval)
+    expression.array = expression.array.map(v => alangEval(v, variables))
     const [builtinName, ...parameters] = expression.array;
     return builtins[builtinName](parameters, variables);
   }
