@@ -1,7 +1,1 @@
-(callFunction 
-  (defineFunction [v]
-    [callFunction [getProperty [globalObject] console log] hello]
-    [callFunction [getProperty [globalObject] console log] [getArgument v]]
-  )
-  john
-)
+[callFunction (getProperty (globalObject) console log ) [hello world]]
