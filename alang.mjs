@@ -1,6 +1,14 @@
 const fs = await import("node:fs/promises");
 const { compileRegex } = await import("./compile-regex.mjs")
 
+class CodeArray
+{
+  constructor(array)
+  {
+    this.array = array;
+  }
+}
+
 // Functions that come built in to the language.
 // More can be added at runtime.
 const builtins =
@@ -48,14 +56,11 @@ const builtins =
     const body = `alangEval(${doThingsExpressionString}, ${context});`;
     return new Function(argumentNames, body);
   },
-  "doThings": function(args, context)
+  "doThings": function(expressions, variables)
   {
-    // for (let i = 0; i < args.length; i++)
-    // {
-    //   const array = args[i];
-    //   if (i === args.length - 1) return alangEval(array, context)
-    //   alangEval(array, context);
-    // }
+    const codified = expressions.map(markDataAsCode);
+    const evaluated = codified.map(expression => alangEval(expression, variables));
+    return evaluated[evaluated.length - 1];
   },
   "enterDebugger": function(args, context)
   {
@@ -65,7 +70,7 @@ const builtins =
   {
     return context.find((item) => item[0] === args[0])[1];
   },
-  "setArgument": function(args, context)
+  "setArgument": function(args)
   {
     const [key, value] = args;
     const item = context.find((item) => item[0] === key);
@@ -86,52 +91,36 @@ const builtins =
 // The expression parameter is a javascript array. 
 // It is on the global object so that it's accessible by 
 // javascript which is parsed in the future.
-global.alangEval = function(expression, context)
+global.alangEval = function(expression, variables)
 {
-  if (!Array.isArray(expression)) return expression;
-
-  for (let i = 0; i < expression.length; i++)
+  if (expression instanceof CodeArray)
   {
-    const listItem = expression[i];
-    if (Array.isArray(listItem))
-    {
-      if (listItem[0] === "data")
-      {
-        for (const subArrayItem of listItem)
-          if (Array.isArray(subArrayItem)) 
-            alangEval(subArrayItem, context);
-      }
-      else
-      {
-        expression[i] = alangEval(listItem, context);
-      }
-    }
+    expression.array = expression.array.map(alangEval)
+    const [builtinName, ...parameters] = expression.array;
+    return builtins[builtinName](parameters, variables);
   }
 
-  let [first, ...others] = expression;
-  others = arrayToCodeRecursive(others);
-  if (first === "data") return expression;
-  else if (first !== undefined) return builtins[first](others, context);
-  else return [];
+  return expression;
 
 };
 
-// Removes the first element of the array if the first element is the string "data".
-// Also does so recursively for any child arrays.
-function arrayToCodeRecursive(value)
+function differentiateCodeAndData(expression)
 {
-  let returnValue = value;
-  if (Array.isArray(returnValue))
-  {
-    if (returnValue[0] === "data")
-      returnValue = returnValue.slice(1);
-    returnValue = returnValue.map(arrayToCodeRecursive);
-  }
-  return returnValue;
+  if (!Array.isArray(expression)) return expression;
+  expression = expression.map(differentiateCodeAndData);
+  if (expression[0] === "data") return expression.slice(1);
+  else return new CodeArray(expression);
+}
+
+function markDataAsCode(data)
+{
+  return new CodeArray(data);
 }
 
 const sourceCode = await fs.readFile("source-code.alang", "utf-8");
 
 const json = compileRegex(sourceCode);
 
-console.log(alangEval(json));
+const differentiated = differentiateCodeAndData(json);
+
+console.log(alangEval(differentiated, []));
