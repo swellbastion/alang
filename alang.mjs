@@ -39,21 +39,21 @@ const builtins =
   },
   "defineFunction": function(args)
   {
-    const argumentNames = arrayToCodeRecursive(args[0]);
+    const argumentNames = args[0];
     let expressions = args.slice(1);
-    expressions = arrayToCodeRecursive(expressions);
+    // todo: make CodeArrays in the eval
     let doThingsExpression = ["doThings"].concat(expressions);
-    // doThingsExpression = markFunctionArguments(doThingsExpression);
+    doThingsExpression = markFunctionArguments(doThingsExpression);
     const penguinRegex = /"🐧(.*)"/g;
     const doThingsExpressionString = JSON.stringify(doThingsExpression)
       .replaceAll(penguinRegex, "$1");
-    let context = "[";
+    let variables = "[";
     for (let i = 0; i < argumentNames.length; i++)
     {
-      context += `["${argumentNames[i]}", ${argumentNames[i]}]`;
+      variables += `["${argumentNames[i]}", ${argumentNames[i]}]`;
     }
-    context += "]";
-    const body = `alangEval(${doThingsExpressionString}, ${context});`;
+    variables += "]";
+    const body = `alangEval(${doThingsExpressionString}, ${variables});`;
     return new Function(argumentNames, body);
   },
   "doThings": function(expressions, variables)
@@ -66,15 +66,9 @@ const builtins =
   {
     debugger;
   },
-  "getArgument": function(args, context)
+  "getParameter": function(args, context)
   {
     return context.find((item) => item[0] === args[0])[1];
-  },
-  "setArgument": function(args)
-  {
-    const [key, value] = args;
-    const item = context.find((item) => item[0] === key);
-    item[1] = value;
   },
   "registerWord": function(args)
   {
@@ -92,7 +86,7 @@ const builtins =
     for (let i = 0; i < settings.length;) 
     {
       added.push(settings[i])
-      variables.unshift({[settings[i]]: settings[i + 1]});
+      variables.unshift({[settings[i]]: alangEval(settings[i + 1])});
       i += 2;
     }
 
@@ -141,6 +135,23 @@ function differentiateCodeAndData(expression)
 function markDataAsCode(data)
 {
   return new CodeArray(data);
+}
+
+function markFunctionArguments(expression)
+{
+  const penguinEmoji = "🐧";
+  let returnValue = expression;
+  if (Array.isArray(returnValue))
+  {
+    if (returnValue[0] === "getArgument")
+    {
+      returnValue = returnValue.slice(1);
+      returnValue = penguinEmoji + returnValue[0];
+      return returnValue;
+    }
+    returnValue = returnValue.map(markFunctionArguments);
+  }
+  return returnValue;
 }
 
 const sourceCode = await fs.readFile("source-code.alang", "utf-8");

@@ -1,6 +1,17 @@
-[set [myVar Jesse]
+[set 
+
+  [
+    myVar Jesse
+    myFunc
+      (defineFunction [myParam]
+        [callFunction (getProperty (globalObject) console log ) heelloFromInsideFunction]
+      )
+  ]
+  
   [
     [callFunction (getProperty (globalObject) console log ) hello]
+    [callFunction (get myFunc) _0]
     [callFunction (getProperty (globalObject) console log ) (get myVar)]
   ]
+
 ]
